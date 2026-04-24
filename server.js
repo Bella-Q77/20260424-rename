@@ -27,12 +27,23 @@ app.get('/api/files', (req, res) => {
       return res.status(400).json({ error: '路径不是文件夹' });
     }
 
-    const files = fs.readdirSync(dirPath).filter(file => {
-      const fullPath = path.join(dirPath, file);
-      return fs.statSync(fullPath).isFile();
+    const items = fs.readdirSync(dirPath).map(item => {
+      const fullPath = path.join(dirPath, item);
+      const stats = fs.statSync(fullPath);
+      return {
+        name: item,
+        type: stats.isDirectory() ? 'folder' : 'file'
+      };
     });
 
-    res.json({ files, path: dirPath });
+    items.sort((a, b) => {
+      if (a.type === b.type) {
+        return a.name.localeCompare(b.name);
+      }
+      return a.type === 'folder' ? -1 : 1;
+    });
+
+    res.json({ items, path: dirPath });
   } catch (error) {
     console.error('读取文件出错:', error);
     res.status(500).json({ error: '读取文件失败: ' + error.message });
