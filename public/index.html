@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件重命名工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei', 'Segoe UI', Tahoma, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+
+    .input-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .input-group label {
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2980b9;
+    }
+
+    .btn-success {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #219a52;
+    }
+
+    .btn:disabled {
+      background-color: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .table-section {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .table-header h2 {
+      font-size: 18px;
+      color: #2c3e50;
+    }
+
+    .table-wrapper {
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background-color: #f8f9fa;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      font-weight: bold;
+      color: #2c3e50;
+      background-color: #f8f9fa;
+    }
+
+    tr:hover {
+      background-color: #f5f7fa;
+    }
+
+    .old-name {
+      color: #555;
+      font-family: 'Consolas', 'Monaco', monospace;
+      word-break: break-all;
+    }
+
+    .new-name-input {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      transition: border-color 0.3s;
+    }
+
+    .new-name-input:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .action-section {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+      padding: 12px;
+      border-radius: 4px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .result-summary {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .result-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .result-item:last-child {
+      border-bottom: none;
+    }
+
+    .result-status {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      margin-right: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-success {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .status-failed {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .status-skipped {
+      background-color: #f39c12;
+      color: white;
+    }
+
+    .result-info {
+      flex: 1;
+    }
+
+    .result-info small {
+      color: #666;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .empty-state p {
+      font-size: 16px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .path-info {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>文件批量重命名工具</h1>
+
+    <div class="input-section">
+      <div class="input-group">
+        <label for="filePath">文件夹路径：</label>
+        <input type="text" id="filePath" placeholder="请输入文件夹路径，例如：C:\Users\Documents">
+        <button class="btn btn-primary" id="loadBtn">加载文件</button>
+      </div>
+      <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <div class="table-section" id="tableSection" style="display: none;">
+      <div class="table-header">
+        <h2>文件列表</h2>
+        <div class="path-info" id="pathInfo"></div>
+      </div>
+      <div class="table-wrapper">
+        <table id="fileTable">
+          <thead>
+            <tr>
+              <th style="width: 45%;">原文件名</th>
+              <th style="width: 55%;">新文件名（留空则不重命名）</th>
+            </tr>
+          </thead>
+          <tbody id="fileTableBody">
+          </tbody>
+        </table>
+      </div>
+      <div class="action-section">
+        <button class="btn btn-success" id="confirmBtn">确认重命名</button>
+      </div>
+      <div class="success-message" id="successMessage"></div>
+      <div class="result-summary" id="resultSummary"></div>
+    </div>
+
+    <div class="table-section" id="emptyState">
+      <div class="empty-state">
+        <p>请输入文件夹路径并点击"加载文件"按钮</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPath = '';
+
+    document.getElementById('loadBtn').addEventListener('click', loadFiles);
+    document.getElementById('confirmBtn').addEventListener('click', confirmRename);
+    document.getElementById('filePath').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        loadFiles();
+      }
+    });
+
+    function showError(message) {
+      const errorElement = document.getElementById('errorMessage');
+      errorElement.textContent = message;
+      errorElement.style.display = 'block';
+      setTimeout(() => {
+        errorElement.style.display = 'none';
+      }, 5000);
+    }
+
+    function showSuccess(message) {
+      const successElement = document.getElementById('successMessage');
+      successElement.textContent = message;
+      successElement.style.display = 'block';
+      setTimeout(() => {
+        successElement.style.display = 'none';
+      }, 5000);
+    }
+
+    async function loadFiles() {
+      const filePath = document.getElementById('filePath').value.trim();
+      
+      if (!filePath) {
+        showError('请输入文件夹路径');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/files?path=${encodeURIComponent(filePath)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || '加载文件失败');
+          return;
+        }
+
+        currentPath = data.path;
+        renderFileTable(data.files);
+        
+        document.getElementById('emptyState').style.display = 'none';
+        document.getElementById('tableSection').style.display = 'block';
+        document.getElementById('pathInfo').textContent = `当前路径: ${currentPath}`;
+
+      } catch (error) {
+        showError('网络错误: ' + error.message);
+      }
+    }
+
+    function renderFileTable(files) {
+      const tbody = document.getElementById('fileTableBody');
+      tbody.innerHTML = '';
+
+      if (files.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="2" class="empty-state">
+              <p>该文件夹下没有文件</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      files.forEach((file, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="old-name">${escapeHtml(file)}</td>
+          <td>
+            <input type="text" 
+                   class="new-name-input" 
+                   data-index="${index}" 
+                   data-old-name="${escapeHtml(file)}"
+                   placeholder="输入新文件名"
+                   value="">
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function confirmRename() {
+      const inputs = document.querySelectorAll('.new-name-input');
+      const renames = [];
+
+      inputs.forEach(input => {
+        const oldName = input.getAttribute('data-old-name');
+        const newName = input.value.trim();
+        renames.push({ oldName, newName });
+      });
+
+      const hasNewNames = renames.some(r => r.newName !== '');
+      if (!hasNewNames) {
+        showError('请至少输入一个新文件名');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/rename', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            path: currentPath,
+            renames: renames
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showError(data.error || '重命名失败');
+          return;
+        }
+
+        showResults(data.results);
+        showSuccess('重命名操作已完成');
+
+        updateTableAfterRename(data.results);
+
+      } catch (error) {
+        showError('网络错误: ' + error.message);
+      }
+    }
+
+    function showResults(results) {
+      const summary = document.getElementById('resultSummary');
+      summary.style.display = 'block';
+      
+      const successCount = results.filter(r => r.success).length;
+      const failedCount = results.filter(r => !r.success).length;
+      
+      let html = `
+        <h3>操作结果（成功: ${successCount} 个，失败: ${failedCount} 个）</h3>
+      `;
+
+      results.forEach(result => {
+        let statusClass = '';
+        let statusSymbol = '';
+        
+        if (result.message.includes('跳过')) {
+          statusClass = 'status-skipped';
+          statusSymbol = '-';
+        } else if (result.success) {
+          statusClass = 'status-success';
+          statusSymbol = '✓';
+        } else {
+          statusClass = 'status-failed';
+          statusSymbol = '✗';
+        }
+
+        html += `
+          <div class="result-item">
+            <div class="result-status ${statusClass}">${statusSymbol}</div>
+            <div class="result-info">
+              <div>${escapeHtml(result.oldName)}${result.newName ? ' → ' + escapeHtml(result.newName) : ''}</div>
+              <small>${result.message}</small>
+            </div>
+          </div>
+        `;
+      });
+
+      summary.innerHTML = html;
+    }
+
+    function updateTableAfterRename(results) {
+      const inputs = document.querySelectorAll('.new-name-input');
+      
+      results.forEach((result, index) => {
+        const input = inputs[index];
+        if (!input) return;
+
+        if (!result.success && !result.message.includes('跳过')) {
+          input.style.borderColor = '#e74c3c';
+          input.style.boxShadow = '0 0 0 2px rgba(231, 76, 60, 0.2)';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
