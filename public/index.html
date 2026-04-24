@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>文件重命名工具</title>
+  <title>文件和文件夹重命名工具</title>
   <style>
     * {
       margin: 0;
@@ -273,32 +273,51 @@
       font-size: 12px;
       color: #7f8c8d;
     }
+
+    .type-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .type-folder {
+      background-color: #ffeaa7;
+      color: #e17055;
+    }
+
+    .type-file {
+      background-color: #dfe6e9;
+      color: #636e72;
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>文件批量重命名工具</h1>
+    <h1>文件和文件夹批量重命名工具</h1>
 
     <div class="input-section">
       <div class="input-group">
         <label for="filePath">文件夹路径：</label>
         <input type="text" id="filePath" placeholder="请输入文件夹路径，例如：C:\Users\Documents">
-        <button class="btn btn-primary" id="loadBtn">加载文件</button>
+        <button class="btn btn-primary" id="loadBtn">加载</button>
       </div>
       <div class="error-message" id="errorMessage"></div>
     </div>
 
     <div class="table-section" id="tableSection" style="display: none;">
       <div class="table-header">
-        <h2>文件列表</h2>
+        <h2>文件和文件夹列表</h2>
         <div class="path-info" id="pathInfo"></div>
       </div>
       <div class="table-wrapper">
         <table id="fileTable">
           <thead>
             <tr>
-              <th style="width: 45%;">原文件名</th>
-              <th style="width: 55%;">新文件名（留空则不重命名）</th>
+              <th style="width: 10%;">类型</th>
+              <th style="width: 35%;">原名称</th>
+              <th style="width: 55%;">新名称（留空则不重命名）</th>
             </tr>
           </thead>
           <tbody id="fileTableBody">
@@ -361,12 +380,12 @@
         const data = await response.json();
 
         if (!response.ok) {
-          showError(data.error || '加载文件失败');
+          showError(data.error || '加载失败');
           return;
         }
 
         currentPath = data.path;
-        renderFileTable(data.files);
+        renderFileTable(data.items);
         
         document.getElementById('emptyState').style.display = 'none';
         document.getElementById('tableSection').style.display = 'block';
@@ -377,31 +396,34 @@
       }
     }
 
-    function renderFileTable(files) {
+    function renderFileTable(items) {
       const tbody = document.getElementById('fileTableBody');
       tbody.innerHTML = '';
 
-      if (files.length === 0) {
+      if (items.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="2" class="empty-state">
-              <p>该文件夹下没有文件</p>
+            <td colspan="3" class="empty-state">
+              <p>该文件夹下没有文件或文件夹</p>
             </td>
           </tr>
         `;
         return;
       }
 
-      files.forEach((file, index) => {
+      items.forEach((item, index) => {
         const tr = document.createElement('tr');
+        const typeLabel = item.type === 'folder' ? '文件夹' : '文件';
+        const typeClass = item.type === 'folder' ? 'type-folder' : 'type-file';
         tr.innerHTML = `
-          <td class="old-name">${escapeHtml(file)}</td>
+          <td><span class="type-badge ${typeClass}">${typeLabel}</span></td>
+          <td class="old-name">${escapeHtml(item.name)}</td>
           <td>
             <input type="text" 
                    class="new-name-input" 
                    data-index="${index}" 
-                   data-old-name="${escapeHtml(file)}"
-                   placeholder="输入新文件名"
+                   data-old-name="${escapeHtml(item.name)}"
+                   placeholder="输入新名称"
                    value="">
           </td>
         `;
@@ -427,7 +449,7 @@
 
       const hasNewNames = renames.some(r => r.newName !== '');
       if (!hasNewNames) {
-        showError('请至少输入一个新文件名');
+        showError('请至少输入一个新名称');
         return;
       }
 
